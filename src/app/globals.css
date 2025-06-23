@@ -1,6 +1,20 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@tailwind utilities;
+
+@layer utilities {
+  @keyframes backgroundScroll {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+
+  .animate-background {
+    background-size: 200% 200%;
+    animation: backgroundScroll 6s ease infinite;
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

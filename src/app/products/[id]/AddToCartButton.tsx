@@ -16,7 +16,7 @@ const AddToCartButton = ({ productId, productName, fullPrice }: AddToCartButtonP
       fullPrice,
       quantity: 1,
     };
-    addToCart(itemToAdd);
+    addToCart(itemToAdd);;
   };
 
   return (

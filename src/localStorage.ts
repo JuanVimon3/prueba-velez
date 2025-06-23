@@ -1,3 +1,5 @@
+"use client";
+
 interface CartItem {
   productId: string;
   productName: string;
@@ -7,7 +9,7 @@ interface CartItem {
 
 const addToCart = (item: CartItem) => {
   const cart: CartItem[] = JSON.parse(localStorage.getItem("cart") || "[]");
-  const existingIndex = cart.findIndex(p => p.productId === item.productId);
+  const existingIndex = cart.findIndex((p) => p.productId === item.productId);
 
   if (existingIndex > -1) {
     cart[existingIndex].quantity += item.quantity;
@@ -16,6 +18,8 @@ const addToCart = (item: CartItem) => {
   }
 
   localStorage.setItem("cart", JSON.stringify(cart));
+
+  window.dispatchEvent(new CustomEvent("cartUpdated"));
 };
 
 const getCart = (): CartItem[] => {
@@ -23,3 +27,4 @@ const getCart = (): CartItem[] => {
 };
 
 export { addToCart, getCart };
+

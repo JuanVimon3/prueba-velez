@@ -19,7 +19,7 @@ import Typography from "@mui/material/Typography";
 interface CartItem {
   productId: string;
   productName: string;
-  fullPrice: number;
+  fullPrice?: number;
   quantity: number;
 }
 
@@ -28,25 +28,27 @@ const ShoppingCart = () => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const cart: CartItem[] = getCart() || [];
-      const validCart = cart.filter(
-        (item) => typeof item.fullPrice === "number" && !isNaN(item.fullPrice)
-      );
-      setCartItems(validCart);
-      console.log("Carrito actualizado:", validCart);
-    }, 1000);
+    const updateCart = () => {
+      const cart = getCart();
+      setCartItems(cart);
+    };
 
-    return () => clearInterval(interval);
+    const interval = setInterval(updateCart, 1000);
+    window.addEventListener("cartUpdated", updateCart);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("cartUpdated", updateCart);
+    };
   }, []);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const total = cartItems.reduce(
-    (acc, item) => acc + (item.fullPrice || 0) * item.quantity,
-    0
-  );
+  const total = cartItems.reduce((acc, item) => {
+    const price = Number(item.fullPrice) || 0;
+    return acc + price * item.quantity;
+  }, 0);
 
   return (
     <>
@@ -68,11 +70,14 @@ const ShoppingCart = () => {
           ) : (
             <List>
               {cartItems.map((item, index) => {
-                const subtotal = item.fullPrice * item.quantity;
+                const price = Number(item.fullPrice) || 0;
+                const subtotal = price * item.quantity;
+
                 return (
                   <ListItem key={index}>
                     <Typography>
-                      {item.productName} — Cantidad: {item.quantity} | Precio: ${item.fullPrice} | Subtotal: ${subtotal}
+                      {item.productName ? `${item.productName} | ` : ""}
+                      Cantidad: {item.quantity} | Precio: ${price} | Subtotal: ${subtotal}
                     </Typography>
                   </ListItem>
                 );

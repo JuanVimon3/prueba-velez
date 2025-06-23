@@ -23,28 +23,72 @@ interface Product {
   }[];
 }
 
-async function fetchSimilarProducts(currentProductId: string): Promise<Product[]> {
-  const res = await fetch("https://api-prueba-frontend.onrender.com/api/products", {
-    cache: "no-store",
-  });
-  const allProducts: Product[] = await res.json();
-
-  return allProducts
-    .filter((product) => product.productId !== currentProductId)
-    .slice(0, 3);
+async function fetchProductsFromLocalJSON(): Promise<Product[]> {
+  try {
+    const res = await fetch("/mockProducts.json"); 
+    if (!res.ok) {
+      throw new Error(`Error al cargar los productos: ${res.statusText}`);
+    }
+    const data: Product[] = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching mock products from public directory:", error);
+    return []; 
+  }
 }
 
 export default function SimilarProducts({ productId }: { productId: string }) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchSimilarProducts(productId).then(setProducts);
+    const loadSimilarProducts = async () => {
+      try {
+        setLoading(true);
+        // Obtener todos los productos del JSON local
+        const allProducts = await fetchProductsFromLocalJSON();
+
+        // Filtrar y limitar los productos similares
+        const similarProds = allProducts
+          .filter((product) => product.productId !== productId)
+          .slice(0, 3);
+
+        setProducts(similarProds);
+      } catch (err) {
+        console.error("Error fetching similar products:", err);
+        setError("No se pudieron cargar productos similares.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSimilarProducts();
   }, [productId]);
 
-  if (products.length === 0) {
+  if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <Box mt={5}>
+        <Typography variant="h5" component="h2" gutterBottom>
+          Productos similares
+        </Typography>
+        <Typography>No se encontraron productos similares.</Typography>
       </Box>
     );
   }
@@ -66,8 +110,10 @@ export default function SimilarProducts({ productId }: { productId: string }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.2 }}
               >
-                <Link href={`/products/${product.productId}`}>
+                {/* Asegúrate de que el Link envuelva la Card para que toda la Card sea cliqueable */}
+                <Link href={`/products/${product.productId}`} passHref>
                   <Card
+                    component="a"
                     sx={{
                       cursor: "pointer",
                       transition: "transform 0.2s",
@@ -75,6 +121,9 @@ export default function SimilarProducts({ productId }: { productId: string }) {
                         transform: "scale(1.03)",
                         boxShadow: 6,
                       },
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column'
                     }}
                   >
                     {imageUrl && (
@@ -83,10 +132,10 @@ export default function SimilarProducts({ productId }: { productId: string }) {
                         height="180"
                         image={imageUrl}
                         alt={product.productName}
-                        sx={{ maxWidth: 250, mx: "auto", borderRadius: 2 }}
+                        sx={{ maxWidth: 250, mx: "auto", borderRadius: 2, pt: 2 }}
                       />
                     )}
-                    <CardContent>
+                    <CardContent sx={{ flexGrow: 1 }}> {}
                       <Typography variant="subtitle1" component="p" fontWeight="bold">
                         {product.productName}
                       </Typography>

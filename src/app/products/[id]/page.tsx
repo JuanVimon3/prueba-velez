@@ -4,6 +4,7 @@ import AddToCartButton from "./AddToCartButton";
 import Image from "next/image";
 import SimilarProducts from "./SimilarProducts";
 import ShoppingCart from "./ShoppingCart";
+import React, { useState, useEffect } from "react";
 
 interface Product {
   productId: string;
@@ -14,14 +15,37 @@ interface Product {
   items: {
     images: { imageUrl: string }[];
     sellers: { commertialOffer: { FullSellingPrice: number } }[];
+    Color?: string[];
+    Talla?: string[];
   }[];
 }
 
-export default async function Page({ params }: { params: { id: string } }) {
-  const res = await fetch("https://api-prueba-frontend.onrender.com/api/products", { cache: "no-store" });
-  const products: Product[] = await res.json();
+export default function Page({ params }: { params: { id: string } }) {
+  const [products, setProducts] = useState<Product[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  console.log("Lista completa de productos:", products);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch("/mockProducts.json");
+        if (!res.ok) throw new Error(`Error al cargar los productos: ${res.statusText}`);
+        const data: Product[] = await res.json();
+        setProducts(data);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setError("No se pudieron cargar los productos.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) return <p className="text-center py-8 text-xl">Cargando productos...</p>;
+  if (error) return <p className="text-center py-8 text-red-500">{error}</p>;
+  if (!products) return <p>No hay datos de productos disponibles.</p>;
 
   const product = products.find((p) => p.productId === params.id);
   if (!product) return <p>Producto no encontrado</p>;
@@ -31,38 +55,60 @@ export default async function Page({ params }: { params: { id: string } }) {
   const imageUrl = item?.images?.[0]?.imageUrl;
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-start">
-        <div className="flex flex-col">
+    <div className="relative p-6 min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-200 animate-background">
+      <div className="fixed top-80 right-4 z-50">
+        <ShoppingCart />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+        <div className="flex justify-center">
           {imageUrl && (
             <Image
               src={imageUrl}
               alt={product.productName}
-              width={400}
-              height={400}
+              width={500}
+              height={500}
               className="rounded-xl shadow-lg object-contain bg-white"
             />
           )}
-          <h1 className="text-2xl font-bold mt-4">{product.productName}</h1>
-          <p className="text-lg mt-1">{product.metaTagDescription}</p>
-          <p className="text-lg mt-1">Marca: {product.brand}</p>
-          <p className="text-lg mt-1">Referencia: {product.productReference}</p>
-          <p className="text-lg mt-2 text-green-700 font-semibold">
+        </div>
+
+        <div className="flex flex-col justify-start space-y-4 text-left">
+          <h1 className="text-3xl font-bold">{product.productName}</h1>
+          <p className="text-lg">{product.metaTagDescription}</p>
+          <p className="text-lg">Marca: {product.brand}</p>
+          <p className="text-lg">Referencia: {product.productReference}</p>
+          <p className="text-lg">Color: {item?.Color?.join(", ") || "N/A"}</p>
+          <p className="text-lg">Talla: {item?.Talla?.join(", ") || "N/A"}</p>
+          <p className="text-2xl text-green-700 font-semibold">
             Precio: {fullPrice > 0 ? `$${fullPrice}` : "No disponible"}
           </p>
+
+          <div className="flex justify-center md:justify-start mt-6">
+            <Image
+              src="/LOGO_MARCA_VÉLEZ.png"
+              alt="Logo Vélez"
+              width={200}
+              height={200}
+              className="rounded-xl shadow-md object-contain"
+            />
+          </div>
+
+          {fullPrice > 0 && (
+            <div className="mt-4">
+              <AddToCartButton
+                productId={product.productId}
+                productName={product.productName}
+                fullPrice={fullPrice}
+              />
+            </div>
+          )}
         </div>
-        <ShoppingCart />
       </div>
 
-      {fullPrice > 0 && (
-        <AddToCartButton
-          productId={product.productId}
-          productName={product.productName}
-          fullPrice={fullPrice}
-        />
-      )}
-
-      <SimilarProducts productId={product.productId} />
+      <div className="mt-10">
+        <SimilarProducts productId={product.productId} />
+      </div>
     </div>
   );
 }
