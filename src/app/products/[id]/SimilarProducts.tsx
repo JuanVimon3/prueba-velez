@@ -16,6 +16,7 @@ import {
 interface Product {
   productId: string;
   productName: string;
+  categoryId: string;
   items: {
     images: {
       imageUrl: string;
@@ -25,7 +26,7 @@ interface Product {
 
 async function fetchProductsFromLocalJSON(): Promise<Product[]> {
   try {
-    const res = await fetch("/mockProducts.json"); 
+    const res = await fetch("/mockProducts.json");
     if (!res.ok) {
       throw new Error(`Error al cargar los productos: ${res.statusText}`);
     }
@@ -33,11 +34,11 @@ async function fetchProductsFromLocalJSON(): Promise<Product[]> {
     return data;
   } catch (error) {
     console.error("Error fetching mock products from public directory:", error);
-    return []; 
+    return [];
   }
 }
 
-export default function SimilarProducts({ productId }: { productId: string }) {
+export default function SimilarProducts({ productId, categoryId }: { productId: string; categoryId: string }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,13 +47,13 @@ export default function SimilarProducts({ productId }: { productId: string }) {
     const loadSimilarProducts = async () => {
       try {
         setLoading(true);
-        // Obtener todos los productos del JSON local
         const allProducts = await fetchProductsFromLocalJSON();
+        const categoryProducts = allProducts
+          .filter((product) => product.categoryId === categoryId && product.productId !== productId)
+          .sort(()=>0.5-Math.random());
 
-        // Filtrar y limitar los productos similares
-        const similarProds = allProducts
-          .filter((product) => product.productId !== productId)
-          .slice(0, 3);
+
+        const similarProds = categoryProducts.slice(0, 3);
 
         setProducts(similarProds);
       } catch (err) {
@@ -110,10 +111,9 @@ export default function SimilarProducts({ productId }: { productId: string }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.2 }}
               >
-                {/* Asegúrate de que el Link envuelva la Card para que toda la Card sea cliqueable */}
                 <Link href={`/products/${product.productId}`} passHref>
                   <Card
-                    component="a"
+                    component="div"
                     sx={{
                       cursor: "pointer",
                       transition: "transform 0.2s",
@@ -135,7 +135,7 @@ export default function SimilarProducts({ productId }: { productId: string }) {
                         sx={{ maxWidth: 250, mx: "auto", borderRadius: 2, pt: 2 }}
                       />
                     )}
-                    <CardContent sx={{ flexGrow: 1 }}> {}
+                    <CardContent sx={{ flexGrow: 1 }}> { }
                       <Typography variant="subtitle1" component="p" fontWeight="bold">
                         {product.productName}
                       </Typography>

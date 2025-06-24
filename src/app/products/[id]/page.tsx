@@ -5,6 +5,7 @@ import Image from "next/image";
 import SimilarProducts from "./SimilarProducts";
 import ShoppingCart from "./ShoppingCart";
 import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 
 interface Product {
   productId: string;
@@ -12,6 +13,7 @@ interface Product {
   metaTagDescription: string;
   brand: string;
   productReference: string;
+  categoryId: string;
   items: {
     images: { imageUrl: string }[];
     sellers: { commertialOffer: { FullSellingPrice: number } }[];
@@ -20,7 +22,8 @@ interface Product {
   }[];
 }
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page() {
+  const params = useParams();
   const [products, setProducts] = useState<Product[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +35,7 @@ export default function Page({ params }: { params: { id: string } }) {
         if (!res.ok) throw new Error(`Error al cargar los productos: ${res.statusText}`);
         const data: Product[] = await res.json();
         setProducts(data);
+        console.log('extensión', data.length)
       } catch (err) {
         console.error("Error fetching products:", err);
         setError("No se pudieron cargar los productos.");
@@ -107,7 +111,7 @@ export default function Page({ params }: { params: { id: string } }) {
       </div>
 
       <div className="mt-10">
-        <SimilarProducts productId={product.productId} />
+        <SimilarProducts productId={product.productId} categoryId={product.categoryId} />
       </div>
     </div>
   );
