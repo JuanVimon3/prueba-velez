@@ -26,5 +26,11 @@ const getCart = (): CartItem[] => {
   return JSON.parse(localStorage.getItem("cart") || "[]");
 };
 
+export function removeFromCart(productId: string) {
+  const cart = getCart().filter((item) => item.productId !== productId);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  window.dispatchEvent(new Event("cartUpdated"));
+}
+
 export { addToCart, getCart };
 

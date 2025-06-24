@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getCart } from "../../../localStorage";
+import { getCart, removeFromCart } from "../../../localStorage";
 
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import DeleteIcon from "@mui/icons-material/Delete";
 import Badge from "@mui/material/Badge";
 import IconButton from "@mui/material/IconButton";
 import Dialog from "@mui/material/Dialog";
@@ -15,6 +16,7 @@ import Button from "@mui/material/Button";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
 
 interface CartItem {
   productId: string;
@@ -45,6 +47,12 @@ const ShoppingCart = () => {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  const handleRemove = (productId: string) => {
+    removeFromCart(productId);
+    const updatedCart = cartItems.filter((item) => item.productId !== productId);
+    setCartItems(updatedCart);
+  };
+
   const total = cartItems.reduce((acc, item) => {
     const price = Number(item.fullPrice) || 0;
     return acc + price * item.quantity;
@@ -69,16 +77,26 @@ const ShoppingCart = () => {
             <DialogContentText>No hay productos en el carrito.</DialogContentText>
           ) : (
             <List>
-              {cartItems.map((item, index) => {
+              {cartItems.map((item) => {
                 const price = Number(item.fullPrice) || 0;
                 const subtotal = price * item.quantity;
 
                 return (
-                  <ListItem key={index}>
-                    <Typography>
-                      {item.productName ? `${item.productName} | ` : ""}
-                      Cantidad: {item.quantity} | Precio: ${price} | Subtotal: ${subtotal}
-                    </Typography>
+                  <ListItem key={item.productId}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" width="100%">
+                      <Typography>
+                        {item.productName ? `${item.productName} | ` : ""}
+                        Cantidad: {item.quantity} | Precio: ${price} | Subtotal: ${subtotal}
+                      </Typography>
+                      <IconButton
+                        onClick={() => handleRemove(item.productId)}
+                        edge="end"
+                        color="error"
+                        aria-label="eliminar"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Stack>
                   </ListItem>
                 );
               })}
