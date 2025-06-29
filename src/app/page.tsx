@@ -11,6 +11,7 @@ import {
   Box,
   Grid,
   CircularProgress,
+  TextField
 } from "@mui/material";
 
 interface Product {
@@ -47,6 +48,7 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -80,6 +82,9 @@ export default function Home() {
       </Box>
     );
   }
+  
+  const filteredProducts = products.filter((product) =>
+  product.productName.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <Box mt={5} px={4}>
@@ -87,8 +92,19 @@ export default function Home() {
         Catálogo de Productos
       </Typography>
 
+      <Box mb={4} display="flex" justifyContent="center">
+      <TextField
+        label="Buscar productos"
+        variant="outlined"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{ width: '100%', maxWidth: 400 }}
+      />
+     </Box>
+
+
       <Grid container spacing={4} justifyContent="center">
-        {products.map((product, index) => {
+        {filteredProducts.map((product, index) => {
           const item = product.items[0];
           const imageUrl = item?.images?.[0]?.imageUrl || "";
           const price = item?.sellers?.[0]?.commertialOffer?.FullSellingPrice ?? 0;
