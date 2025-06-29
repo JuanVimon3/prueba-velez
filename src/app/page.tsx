@@ -1,39 +1,150 @@
 'use client';
 
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Box,
+  Grid,
+  CircularProgress,
+} from "@mui/material";
+
+interface Product {
+  productId: string;
+  productName: string;
+  categoryId: string;
+  items: {
+    images: {
+      imageUrl: string;
+    }[];
+    sellers: {
+      commertialOffer: {
+        FullSellingPrice: number;
+      };
+    }[];
+  }[];
+}
+
+async function fetchProductsFromLocalJSON(): Promise<Product[]> {
+  try {
+    const res = await fetch("/mockProducts.json");
+    if (!res.ok) {
+      throw new Error(`Error al cargar los productos: ${res.statusText}`);
+    }
+    const data: Product[] = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching mock products from public directory:", error);
+    return [];
+  }
+}
 
 export default function Home() {
-  const router = useRouter();
-  useEffect(() => {
-    router.push('products/125831465');
-  }, [router]);
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-      </main>
-    </div>
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchProductsFromLocalJSON();
+        setProducts(data);
+      } catch (err) {
+        console.error("Error loading products:", err);
+        setError("No se pudieron cargar los productos.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box mt={5} px={4}>
+      <Typography variant="h4" component="h1" gutterBottom textAlign="center">
+        Catálogo de Productos
+      </Typography>
+
+      <Grid container spacing={4} justifyContent="center">
+        {products.map((product, index) => {
+          const item = product.items[0];
+          const imageUrl = item?.images?.[0]?.imageUrl || "";
+          const price = item?.sellers?.[0]?.commertialOffer?.FullSellingPrice ?? 0;
+
+          return (
+            <Grid component='div' key={product.productId}>
+               <motion.div
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                style={{ width: "100%", maxWidth: 280 }}
+              >
+                <Link href={`/products/${product.productId}`} passHref>
+                  <Card
+                    sx={{
+                      height: 250,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      cursor: "pointer",
+                      transition: "transform 0.2s",
+                      "&:hover": {
+                        transform: "scale(1.03)",
+                        boxShadow: 6,
+                      },
+                    }}
+                  >
+                    {imageUrl && (
+                      <CardMedia
+                        component="img"
+                        image={imageUrl}
+                        alt={product.productName}
+                        sx={{
+                          height: 180,
+                          objectFit: "contain",
+                          p: 2,
+                          borderRadius: 2,
+                        }}
+                      />
+                    )}
+
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Typography variant="subtitle1" fontWeight="bold" noWrap>
+                        {product.productName}
+                      </Typography>
+                      <Typography variant="body1" color="green">
+                        {price > 0 ? `$${price}` : "No disponible"}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            </Grid>
+          );
+        })}
+      </Grid>
+    </Box>
   );
 }
