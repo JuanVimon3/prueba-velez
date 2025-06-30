@@ -1,6 +1,6 @@
 "use client";
 
-interface CartItem {
+export interface CartItem {
   productId: string;
   productName: string;
   fullPrice: number;
@@ -18,12 +18,16 @@ const addToCart = (item: CartItem) => {
   }
 
   localStorage.setItem("cart", JSON.stringify(cart));
-
   window.dispatchEvent(new CustomEvent("cartUpdated"));
 };
 
 const getCart = (): CartItem[] => {
   return JSON.parse(localStorage.getItem("cart") || "[]");
+};
+
+const updateCart = (cart: CartItem[]) => {
+  localStorage.setItem("cart", JSON.stringify(cart));
+  window.dispatchEvent(new CustomEvent("cartUpdated"));
 };
 
 export function removeFromCart(productId: string) {
@@ -32,5 +36,4 @@ export function removeFromCart(productId: string) {
   window.dispatchEvent(new Event("cartUpdated"));
 }
 
-export { addToCart, getCart };
-
+export { addToCart, getCart, updateCart };

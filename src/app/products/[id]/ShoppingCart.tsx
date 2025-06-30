@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getCart, removeFromCart } from "../../../localStorage";
+import { getCart, removeFromCart, updateCart } from "../../../localStorage";
+import type { CartItem } from "../../../localStorage";
 
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -17,13 +18,9 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
 
-interface CartItem {
-  productId: string;
-  productName: string;
-  fullPrice?: number;
-  quantity: number;
-}
 
 const ShoppingCart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -51,6 +48,17 @@ const ShoppingCart = () => {
     removeFromCart(productId);
     const updatedCart = cartItems.filter((item) => item.productId !== productId);
     setCartItems(updatedCart);
+  };
+
+  const handleQuantityChange = (productId: string, delta: number) => {
+    const updatedItems = cartItems.map((item) =>
+      item.productId === productId
+        ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+        : item
+    );
+
+    setCartItems(updatedItems);
+    updateCart(updatedItems);
   };
 
   const total = cartItems.reduce((acc, item) => {
@@ -83,20 +91,38 @@ const ShoppingCart = () => {
 
                 return (
                   <ListItem key={item.productId}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" width="100%">
-                      <Typography>
+                   <Stack direction="row" justifyContent="space-between" alignItems="center" width="100%">
+                      <Typography sx={{ flex: 1 }}>
                         {item.productName ? `${item.productName} | ` : ""}
-                        Cantidad: {item.quantity} | Precio: ${price} | Subtotal: ${subtotal}
+                        Precio: ${price} | Subtotal: ${subtotal}
                       </Typography>
-                      <IconButton
-                        onClick={() => handleRemove(item.productId)}
-                        edge="end"
-                        color="error"
-                        aria-label="eliminar"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleQuantityChange(item.productId, -1)}
+                        >
+                          <RemoveIcon />
+                        </IconButton>
+                        <Typography>{item.quantity}</Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleQuantityChange(item.productId, 1)}
+                        >
+                          <AddIcon />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleRemove(item.productId)}
+                          edge="end"
+                          color="error"
+                          aria-label="eliminar"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Stack>
                     </Stack>
+
+                        
                   </ListItem>
                 );
               })}
