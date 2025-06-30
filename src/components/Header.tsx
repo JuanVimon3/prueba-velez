@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import ShoppingCart from '@/app/products/[id]/ShoppingCart';
 
 export default function Header() {
   return (
@@ -11,6 +12,7 @@ export default function Header() {
           <Link href="/" className="hover:underline">Inicio</Link>
           <span className="text-gray-400 cursor-default">Login</span>
           <span className="text-gray-400 cursor-default">Contacto</span>
+          <ShoppingCart/>
         </nav>
       </div>
     </header>
