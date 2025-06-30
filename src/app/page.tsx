@@ -87,7 +87,25 @@ export default function Home() {
   product.productName.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
-    <Box mt={5} px={4}>
+    <>
+      <section className="relative w-full h-[250px]">
+         <video
+          src="/video1.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover filter grayscale"
+        />
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <h1 className="text-white text-2xl sm:text-4xl md:text-5xl font-semibold text-center px-2 drop-shadow-lg leading-snug">
+            Productos hechos a mano,<br />
+            uno a uno, con alma y con historia
+          </h1>
+       </div>
+      </section>
+      <Box mt={5} px={4}>
       <Typography variant="h4" component="h1" gutterBottom textAlign="center">
         Catálogo de Productos
       </Typography>
@@ -162,5 +180,6 @@ export default function Home() {
         })}
       </Grid>
     </Box>
+    </>   
   );
 }
